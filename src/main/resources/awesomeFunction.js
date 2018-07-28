@@ -1,4 +1,4 @@
-var compositeFunction = function(event, context, callback){
+var awesomeFunction = function(event, context, callback){
 
     print(event)
     print(context)
