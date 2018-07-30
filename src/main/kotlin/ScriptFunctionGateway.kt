@@ -8,7 +8,11 @@ import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
 class ScriptFunctionGateway(private val lowLevelFunctions: String) {
+    val scriptEngine:ScriptEngine
 
+    init {
+        this.scriptEngine = ScriptEngineManager().getEngineByName("js")
+    }
     companion object {
         const val INNER_LOGIC =
             "  var functionResponse = {}; " +
@@ -23,13 +27,15 @@ class ScriptFunctionGateway(private val lowLevelFunctions: String) {
             " }; "
     }
 
-    @Throws(ScriptException::class, NoSuchMethodException::class)
-    fun invoke(functionName: String, event: Map<String,Any>, context: Map<String,Any>): JSONObject {
+    fun load(functionName: String):ScriptFunctionGateway{
         val renaming = "compositeFunction = $functionName;"
         val functionCode = File(ClassLoader.getSystemResource( "$functionName.js").file).readText()
+        this.scriptEngine.eval(this.lowLevelFunctions + INNER_LOGIC + functionCode + renaming)
+        return this
+    }
 
-        val se = ScriptEngineManager().getEngineByName("js")
-        se.eval(this.lowLevelFunctions + INNER_LOGIC + functionCode + renaming)
-        return JSONObject((se as Invocable).invokeFunction("perform", event, context) as ScriptObjectMirror)
+    @Throws(ScriptException::class, NoSuchMethodException::class)
+    fun invoke(functionName: String, event: Map<String,Any>, context: Map<String,Any>): JSONObject {
+        return JSONObject((this.scriptEngine as Invocable).invokeFunction("perform", event, context) as ScriptObjectMirror)
     }
 }
