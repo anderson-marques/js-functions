@@ -14,3 +14,8 @@ Low level functions are functions implemented in pure kotlin or native code.
 ## High Level Functions
 
 High level functions are JavaScript functions that respect a default interface and can orcherstrate the execution of low level functions.
+
+## Improvements
+
+- Babel for using EC2015/EC6
+- Kotlin scripts to javascript
