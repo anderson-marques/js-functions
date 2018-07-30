@@ -13,29 +13,25 @@ class ScriptFunctionGateway(private val lowLevelFunctions: String) {
     init {
         this.scriptEngine = ScriptEngineManager().getEngineByName("js")
     }
-    companion object {
-        const val INNER_LOGIC =
-            "  var functionResponse = {}; " +
-
-            "  var callback = function(response){ " +
-            "    functionResponse = response "+
-            "  }; "+
-
-            " var perform = function(event, context){ "+
-            "    compositeFunction(event, context, callback); "+
-            "    return functionResponse; " +
-            " }; "
-    }
 
     fun load(functionName: String):ScriptFunctionGateway{
-        val renaming = "compositeFunction = $functionName;"
+        val performLogic =
+
+        " var perform_$functionName = function(event, context){ "+
+        "     var functionResponse = {};             " +
+        "     var callback = function(response){ " +
+        "        functionResponse = response "+
+        "     }; "+
+        "     $functionName(event, context, callback); "+
+        "     return functionResponse; " +
+        " }; "
         val functionCode = File(ClassLoader.getSystemResource( "$functionName.js").file).readText()
-        this.scriptEngine.eval(this.lowLevelFunctions + INNER_LOGIC + functionCode + renaming)
+        this.scriptEngine.eval(this.lowLevelFunctions + performLogic + functionCode)
         return this
     }
 
     @Throws(ScriptException::class, NoSuchMethodException::class)
     fun invoke(functionName: String, event: Map<String,Any>, context: Map<String,Any>): JSONObject {
-        return JSONObject((this.scriptEngine as Invocable).invokeFunction("perform", event, context) as ScriptObjectMirror)
+        return JSONObject((this.scriptEngine as Invocable).invokeFunction("perform_$functionName", event, context) as ScriptObjectMirror)
     }
 }
